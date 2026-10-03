@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'router/app_router.dart';
 import 'theme/app_theme.dart';
-import 'screens/sign_up_screen.dart';
 
 void main() => runApp(const MovieLogApp());
 
@@ -10,11 +10,11 @@ class MovieLogApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'MovieLog',
       theme: AppTheme.light,
-      home: const SignUpScreen(), 
+      routerConfig: AppRouter.router, // GoRouter 연결
     );
   }
 }
