@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,16 @@ import '../core/utils/movie_format.dart';
 import '../view_models/movie_list_view_model.dart';
 import '../widgets/movie_grid_card.dart';
 import '../widgets/state_message.dart';
+import '../models/movie.dart';
+import '../services/fake_movie_service.dart';
+import '../storage/genre_preference.dart';
+import '../widgets/genre_chip_bar.dart';
+import '../widgets/movie_grid.dart';
+import '../widgets/movie_list_empty.dart';
+import '../widgets/movie_list_error.dart';
+import '../widgets/movie_list_loading.dart';
+
+enum _DebugScenario { success, empty, failure, failThenRetrySuccess }
 
 class MovieListScreen extends StatelessWidget {
   const MovieListScreen({super.key});
