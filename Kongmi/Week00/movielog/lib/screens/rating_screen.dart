@@ -5,7 +5,9 @@ import '../theme/app_text_styles.dart';
 import '../widgets/common_app_bar.dart';
 
 class RatingScreen extends StatefulWidget {
-  const RatingScreen({super.key});
+  const RatingScreen({super.key, required this.movieId});
+
+  final int movieId;
 
   @override
   State<RatingScreen> createState() => _RatingScreenState();
@@ -35,7 +37,6 @@ class _RatingScreenState extends State<RatingScreen> {
                 style: AppTextStyles.titleMedium,
               ),
               const SizedBox(height: 32),
-
               RatingBar.builder(
                 initialRating: 0,
                 minRating: 0.5,
@@ -54,16 +55,15 @@ class _RatingScreenState extends State<RatingScreen> {
                 },
               ),
               const SizedBox(height: 16),
-
               Text(
                 _rating > 0 ? '$_rating / 5.0 점' : '별점을 선택해주세요',
                 style: AppTextStyles.bodyMedium,
               ),
               const SizedBox(height: 48),
-
               ElevatedButton(
                 onPressed: canSave
                     ? () {
+                        debugPrint('[Rating] movieId: ${widget.movieId}, score: $_rating');
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('$_rating점 평점이 저장되었습니다!')),
                         );
@@ -71,8 +71,7 @@ class _RatingScreenState extends State<RatingScreen> {
                     : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.violet,
-                  disabledBackgroundColor:
-                      AppColors.violet.withValues(alpha: 0.3),
+                  disabledBackgroundColor: AppColors.violet.withValues(alpha: 0.3),
                   foregroundColor: AppColors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(

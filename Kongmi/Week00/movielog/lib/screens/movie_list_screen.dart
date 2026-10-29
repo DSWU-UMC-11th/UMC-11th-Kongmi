@@ -1,6 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../core/utils/movie_format.dart';
+import '../view_models/movie_list_view_model.dart';
+import '../widgets/movie_grid_card.dart';
+import '../widgets/state_message.dart';
 import '../models/movie.dart';
 import '../services/fake_movie_service.dart';
 import '../storage/genre_preference.dart';
@@ -12,143 +18,143 @@ import '../widgets/movie_list_loading.dart';
 
 enum _DebugScenario { success, empty, failure, failThenRetrySuccess }
 
-class MovieListScreen extends StatefulWidget {
+class MovieListScreen extends StatelessWidget {
   const MovieListScreen({super.key});
 
   @override
-  State<MovieListScreen> createState() => _MovieListScreenState();
-}
-
-class _MovieListScreenState extends State<MovieListScreen> {
-  static const _genres = ['전체', '드라마', 'SF', '애니메이션', '스릴러', '로맨스', '코미디'];
-
-  final _movieService = const FakeMovieService();
-  final _genrePreference = GenrePreference();
-
-  late Future<List<Movie>> _moviesFuture;
-  String _selectedGenre = '전체';
-
-  _DebugScenario _scenario = _DebugScenario.success;
-  int _loadCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _moviesFuture = _fetchMovies();
-    _restoreGenre();
-  }
-
-  Future<List<Movie>> _fetchMovies() {
-    _loadCount++;
-    final mode = switch (_scenario) {
-      _DebugScenario.success => MovieLoadMode.success,
-      _DebugScenario.empty => MovieLoadMode.empty,
-      _DebugScenario.failure => MovieLoadMode.failure,
-      _DebugScenario.failThenRetrySuccess =>
-        _loadCount == 1 ? MovieLoadMode.failure : MovieLoadMode.success,
-    };
-    // TODO(5주차 유저별 평점 조회 API): FakeMovieService를 실제 API Service로 교체
-    return _movieService.fetchMovies(mode: mode);
-  }
-
-  Future<void> _restoreGenre() async {
-    final genre = await _genrePreference.read();
-    if (!mounted) return;
-    setState(() {
-      _selectedGenre = _genres.contains(genre) ? genre : '전체';
-    });
-  }
-
-  Future<void> _selectGenre(String genre) async {
-    setState(() => _selectedGenre = genre);
-    await _genrePreference.save(genre);
-  }
-
-  void _retry() {
-    setState(() {
-      _moviesFuture = _fetchMovies();
-    });
-  }
-
-  void _changeScenario(_DebugScenario scenario) {
-    setState(() {
-      _scenario = scenario;
-      _loadCount = 0;
-      _moviesFuture = _fetchMovies();
-    });
-  }
-
-  List<Movie> _filterByGenre(List<Movie> movies) {
-    if (_selectedGenre == '전체') return movies;
-    return movies
-        .where((movie) => movie.genre.split('/').contains(_selectedGenre))
-        .toList();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         title: Text(
           '영화',
-          style: TextStyle(
-            color: colorScheme.primary,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(color: primary, fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-          if (kDebugMode)
-            PopupMenuButton<_DebugScenario>(
-              icon: const Icon(Icons.bug_report_outlined),
-              onSelected: _changeScenario,
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: _DebugScenario.success, child: Text('성공')),
-                PopupMenuItem(value: _DebugScenario.empty, child: Text('빈 목록')),
-                PopupMenuItem(value: _DebugScenario.failure, child: Text('실패')),
-                PopupMenuItem(
-                  value: _DebugScenario.failThenRetrySuccess,
-                  child: Text('실패 → 재시도 성공'),
-                ),
-              ],
-            ),
+          IconButton(icon: Icon(Icons.search, color: primary), onPressed: () {}),
         ],
       ),
-      body: Column(
+      body: const Column(
         children: [
-          GenreChipBar(
-            genres: _genres,
-            selectedGenre: _selectedGenre,
-            onSelected: _selectGenre,
+          _GenreChips(),
+          SizedBox(height: 8),
+          Expanded(child: _MovieGridArea()),
+        ],
+      ),
+    );
+  }
+}
+
+class _GenreChips extends StatelessWidget {
+  const _GenreChips();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<MovieListViewModel>(
+      builder: (context, vm, _) {
+        return AbsorbPointer(
+          absorbing: vm.isLoading,
+          child: Opacity(
+            opacity: vm.isLoading ? 0.5 : 1,
+            child: SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _GenreChip(
+                    label: '전체',
+                    selected: vm.selectedGenreId == null,
+                    onTap: () => vm.selectGenre(null),
+                  ),
+                  for (final genre in vm.genres) ...[
+                    const SizedBox(width: 8),
+                    _GenreChip(
+                      label: genre.name,
+                      selected: vm.selectedGenreId == genre.id,
+                      onTap: () => vm.selectGenre(genre.id),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: FutureBuilder<List<Movie>>(
-              future: _moviesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const MovieListLoading();
-                }
+        );
+      },
+    );
+  }
+}
 
-                if (snapshot.hasError) {
-                  return MovieListError(onRetry: _retry);
-                }
+class _GenreChip extends StatelessWidget {
+  const _GenreChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
-                final movies =
-                    _filterByGenre(snapshot.data ?? const <Movie>[]);
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
-                if (movies.isEmpty) {
-                  return const MovieListEmpty();
-                }
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
 
-                return MovieGrid(movies: movies);
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      showCheckmark: false,
+      onSelected: (_) => onTap(),
+      selectedColor: primary,
+      backgroundColor: primary.withValues(alpha: 0.12),
+      side: BorderSide.none,
+      shape: const StadiumBorder(),
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : Colors.black87,
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
+    );
+  }
+}
+
+class _MovieGridArea extends StatelessWidget {
+  const _MovieGridArea();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<MovieListViewModel>(
+      builder: (context, vm, _) {
+        return switch (vm.status) {
+          MovieListLoadStatus.idle ||
+          MovieListLoadStatus.loading => const Center(child: CircularProgressIndicator()),
+          MovieListLoadStatus.error => StateMessage(
+              message: vm.message ?? '오류가 발생했어요.',
+              onRetry: () => context.read<MovieListViewModel>().loadInitial(),
+            ),
+          MovieListLoadStatus.empty => const StateMessage(message: '해당 조건의 영화가 없어요.'),
+          MovieListLoadStatus.success => GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.55,
+              ),
+              itemCount: vm.movies.length,
+              itemBuilder: (context, index) {
+                final movie = vm.movies[index];
+                return MovieGridCard(
+                  movie: movie,
+                  subtitle: movieSubtitle(movie, vm.genreNames),
+                  onTap: () => context.push('/movies/${movie.id}', extra: movie),
+                );
               },
             ),
-          ),
-        ],
-      ),
+        };
+      },
     );
   }
 }
