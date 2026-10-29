@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 const _nickname = '무비러버';
 const _bio = '매주 주말엔 영화관으로 출근하는 프로 관람객. 좋은 영화를 보고 기록하는 것을 좋아합니다.';
@@ -50,9 +51,54 @@ class MyPageScreen extends StatelessWidget {
                 ],
               ],
             ),
+            const SizedBox(height: 20),
+            _MenuRow(
+              title: '내가 등록한 평점',
+              onTap: () => context.push('/my/ratings'),
+            ),
             const SizedBox(height: 28),
             const _FavoriteGenres(genres: _favoriteGenres),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.title, required this.onTap});
+
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.primary.withValues(alpha: 0.3), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: colors.primary),
+            ],
+          ),
         ),
       ),
     );
