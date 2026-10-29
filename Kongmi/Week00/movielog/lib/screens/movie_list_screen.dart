@@ -1,78 +1,149 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-import '../models/movie.dart';
-import '../widgets/movie_card.dart';
+import '../core/utils/movie_format.dart';
+import '../view_models/movie_list_view_model.dart';
+import '../widgets/movie_grid_card.dart';
+import '../widgets/state_message.dart';
 
-class MovieListScreen extends StatefulWidget {
+class MovieListScreen extends StatelessWidget {
   const MovieListScreen({super.key});
 
   @override
-  State<MovieListScreen> createState() => _MovieListScreenState();
-}
-
-class _MovieListScreenState extends State<MovieListScreen> {
-  String selectedGenre = '전체';
-
-  final List<String> genres = ['전체', '드라마', 'SF', '애니메이션', '스릴러'];
-
-  @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    final filteredMovies = selectedGenre == '전체'
-        ? mockMovies
-        : mockMovies
-            .where((movie) => movie.genre.contains(selectedGenre))
-            .toList();
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영화', style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
+        centerTitle: false,
+        title: Text(
+          '영화',
+          style: TextStyle(color: primary, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(icon: Icon(Icons.search, color: primary), onPressed: () {}),
+        ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: const Column(
         children: [
-          SizedBox(
-            height: 60,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              itemCount: genres.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final genre = genres[index];
-                final isSelected = selectedGenre == genre;
-                return ChoiceChip(
-                  label: Text(genre),
-                  selected: isSelected,
-                  selectedColor: colors.primary,
-                  labelStyle: TextStyle(
-                    color: isSelected ? colors.onPrimary : colors.onSurface,
-                    fontWeight: FontWeight.w600,
+          _GenreChips(),
+          SizedBox(height: 8),
+          Expanded(child: _MovieGridArea()),
+        ],
+      ),
+    );
+  }
+}
+
+class _GenreChips extends StatelessWidget {
+  const _GenreChips();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<MovieListViewModel>(
+      builder: (context, vm, _) {
+        return AbsorbPointer(
+          absorbing: vm.isLoading,
+          child: Opacity(
+            opacity: vm.isLoading ? 0.5 : 1,
+            child: SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _GenreChip(
+                    label: '전체',
+                    selected: vm.selectedGenreId == null,
+                    onTap: () => vm.selectGenre(null),
                   ),
-                  onSelected: (_) => setState(() => selectedGenre = genre),
+                  for (final genre in vm.genres) ...[
+                    const SizedBox(width: 8),
+                    _GenreChip(
+                      label: genre.name,
+                      selected: vm.selectedGenreId == genre.id,
+                      onTap: () => vm.selectGenre(genre.id),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _GenreChip extends StatelessWidget {
+  const _GenreChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      showCheckmark: false,
+      onSelected: (_) => onTap(),
+      selectedColor: primary,
+      backgroundColor: primary.withValues(alpha: 0.12),
+      side: BorderSide.none,
+      shape: const StadiumBorder(),
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : Colors.black87,
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
+    );
+  }
+}
+
+class _MovieGridArea extends StatelessWidget {
+  const _MovieGridArea();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<MovieListViewModel>(
+      builder: (context, vm, _) {
+        return switch (vm.status) {
+          MovieListLoadStatus.idle ||
+          MovieListLoadStatus.loading => const Center(child: CircularProgressIndicator()),
+          MovieListLoadStatus.error => StateMessage(
+              message: vm.message ?? '오류가 발생했어요.',
+              onRetry: () => context.read<MovieListViewModel>().loadInitial(),
+            ),
+          MovieListLoadStatus.empty => const StateMessage(message: '해당 조건의 영화가 없어요.'),
+          MovieListLoadStatus.success => GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.55,
+              ),
+              itemCount: vm.movies.length,
+              itemBuilder: (context, index) {
+                final movie = vm.movies[index];
+                return MovieGridCard(
+                  movie: movie,
+                  subtitle: movieSubtitle(movie, vm.genreNames),
+                  onTap: () => context.push('/movies/${movie.id}', extra: movie),
                 );
               },
             ),
-          ),
-
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredMovies.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.62,
-              ),
-              itemBuilder: (context, index) =>
-                  MovieCard(movie: filteredMovies[index]),
-            ),
-          ),
-        ],
-      ),
+        };
+      },
     );
   }
 }
