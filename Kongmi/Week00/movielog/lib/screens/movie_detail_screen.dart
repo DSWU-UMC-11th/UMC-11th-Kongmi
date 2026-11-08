@@ -1,39 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../core/utils/movie_format.dart';
-import '../data/models/tmdb_movie_dto.dart';
+import '../view_models/movie_detail_view_model.dart';
+import '../widgets/rating_dialog.dart';
 import '../widgets/tmdb_poster_image.dart';
 
 class MovieDetailScreen extends StatelessWidget {
-  const MovieDetailScreen({super.key, required this.movieId, this.movie});
+  const MovieDetailScreen({super.key});
 
-  final int? movieId;
-  final TmdbMovieDto? movie;
+  Future<void> _openRatingDialog(BuildContext context) async {
+    final viewModel = context.read<MovieDetailViewModel>();
+    final saved = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => RatingDialog(
+        onSubmit: (score, comment) async {
+          await viewModel.createRating(score: score, comment: comment);
+          if (viewModel.submitStatus != SubmitStatus.success) {
+            throw StateError(viewModel.submitMessage ?? '저장에 실패했습니다.');
+          }
+        },
+      ),
+    );
+
+    if (!context.mounted) return;
+    if (saved == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('평점을 등록했습니다. 마이페이지의 "내가 등록한 평점"에서 확인할 수 있습니다.'),
+        ),
+      );
+      return;
+    }
+    if (viewModel.submitStatus == SubmitStatus.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(viewModel.submitMessage ?? '평점을 등록하지 못했습니다.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final movie = this.movie;
-    final movieId = this.movieId;
-
-    if (movie == null || movieId == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('영화 정보를 찾을 수 없어요.'),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => context.go('/movies'),
-                child: const Text('목록으로'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    final viewModel = context.read<MovieDetailViewModel>();
+    final movie = viewModel.movie;
 
     final year = movieYear(movie);
     final primary = Theme.of(context).colorScheme.primary;
@@ -96,14 +107,25 @@ class MovieDetailScreen extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: SizedBox(
-          height: 52,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(shape: const StadiumBorder()),
-            onPressed: () => context.push('/movies/$movieId/rating'),
-            icon: const Icon(Icons.star_outline),
-            label: const Text('평점 남기기'),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!viewModel.canRate)
+              TextButton(
+                onPressed: () => context.push('/register'),
+                child: const Text('평점을 남기려면 학습용 회원가입이 필요합니다. 회원가입하기'),
+              ),
+            SizedBox(
+              height: 52,
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(shape: const StadiumBorder()),
+                onPressed: viewModel.canRate ? () => _openRatingDialog(context) : null,
+                icon: const Icon(Icons.star_outline),
+                label: const Text('평점 남기기'),
+              ),
+            ),
+          ],
         ),
       ),
     );

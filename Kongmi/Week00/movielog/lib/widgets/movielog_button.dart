@@ -9,12 +9,16 @@ class MovieLogButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.width,
+    this.backgroundColor,
+    this.foregroundColor,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
   final double? width;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
   bool get _disabled => isLoading || onPressed == null;
 
@@ -26,9 +30,9 @@ class MovieLogButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: _disabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.violet,
+          backgroundColor: backgroundColor ?? AppColors.violet,
           disabledBackgroundColor: AppColors.gray,
-          foregroundColor: AppColors.white,
+          foregroundColor: foregroundColor ?? AppColors.white,
           disabledForegroundColor: AppColors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 16),

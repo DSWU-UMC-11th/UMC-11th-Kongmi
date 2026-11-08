@@ -1,43 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
+import '../theme/app_colors.dart';
+
 class MovieRatingInput extends StatelessWidget {
   const MovieRatingInput({
     super.key,
     required this.rating,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final double rating;
   final ValueChanged<double> onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        RatingBar.builder(
-          initialRating: rating,
-          minRating: 0.5,
-          allowHalfRating: true,
-          itemCount: 5,
-          itemSize: 36,
-          itemPadding: const EdgeInsets.symmetric(horizontal: 2),
-          itemBuilder: (context, _) =>
-              Icon(Icons.star_rounded, color: colors.primary),
-          onRatingUpdate: onChanged,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          rating == 0 ? '별을 눌러 평점을 선택하세요' : '${rating.toStringAsFixed(1)}점',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: colors.onSurfaceVariant),
-        ),
-      ],
+    return RatingBar.builder(
+      initialRating: rating,
+      minRating: 1,
+      allowHalfRating: false,
+      ignoreGestures: !enabled,
+      itemCount: 5,
+      itemSize: 40,
+      unratedColor: AppColors.violet.withValues(alpha: 0.2),
+      itemBuilder: (context, index) => const Icon(
+        Icons.star_rounded,
+        color: AppColors.violet,
+      ),
+      onRatingUpdate: onChanged,
     );
   }
 }
