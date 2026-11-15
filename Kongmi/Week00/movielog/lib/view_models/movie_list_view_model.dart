@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+
 import '../data/models/tmdb_genre_dto.dart';
 import '../data/models/tmdb_movie_dto.dart';
 import '../data/services/tmdb_movie_service.dart';
@@ -21,7 +22,9 @@ class MovieListViewModel extends ChangeNotifier {
 
   bool get isLoading => status == MovieListLoadStatus.loading;
 
-  Map<int, String> get genreNames => {for (final genre in genres) genre.id: genre.name};
+  Map<int, String> get genreNames => {
+    for (final genre in genres) genre.id: genre.name,
+  };
 
   bool _isStale(int version) => _disposed || version != _requestVersion;
 
@@ -31,7 +34,10 @@ class MovieListViewModel extends ChangeNotifier {
     var hasNextPage = true;
 
     while (byId.length < 30 && hasNextPage) {
-      final page = await _service.discoverMovies(page: pageNumber, genreId: genreId);
+      final page = await _service.discoverMovies(
+        page: pageNumber,
+        genreId: genreId,
+      );
 
       for (final movie in page.results) {
         byId[movie.id] = movie;
@@ -57,8 +63,12 @@ class MovieListViewModel extends ChangeNotifier {
       final result = await _fetchUpToThirtyMovies(genreId: selectedGenreId);
       if (_isStale(version)) return;
       movies = result;
-      debugPrint('[MovieList] genre: $selectedGenreId, movies: ${movies.length}');
-      status = result.isEmpty ? MovieListLoadStatus.empty : MovieListLoadStatus.success;
+      debugPrint(
+        '[MovieList] genre: $selectedGenreId, movies: ${movies.length}',
+      );
+      status = result.isEmpty
+          ? MovieListLoadStatus.empty
+          : MovieListLoadStatus.success;
     } on DioException {
       if (_isStale(version)) return;
       status = MovieListLoadStatus.error;
@@ -84,8 +94,12 @@ class MovieListViewModel extends ChangeNotifier {
       final result = await _fetchUpToThirtyMovies(genreId: genreId);
       if (_isStale(version)) return;
       movies = result;
-      debugPrint('[MovieList] genre: $selectedGenreId, movies: ${movies.length}');
-      status = result.isEmpty ? MovieListLoadStatus.empty : MovieListLoadStatus.success;
+      debugPrint(
+        '[MovieList] genre: $selectedGenreId, movies: ${movies.length}',
+      );
+      status = result.isEmpty
+          ? MovieListLoadStatus.empty
+          : MovieListLoadStatus.success;
     } on DioException {
       if (_isStale(version)) return;
       status = MovieListLoadStatus.error;

@@ -59,61 +59,53 @@ class MyRatingsScreen extends StatelessWidget {
       appBar: const CommonAppBar(title: '내가 등록한 평점', centerTitle: true),
       body: Consumer<MyRatingsViewModel>(
         builder: (context, viewModel, child) {
-          switch (viewModel.status) {
-            case MyRatingsLoadStatus.idle:
-            case MyRatingsLoadStatus.loading:
-              return const Center(child: CircularProgressIndicator());
-            case MyRatingsLoadStatus.empty:
-              return const Center(
-                child: Text('아직 등록한 평점이 없습니다.', style: AppTextStyles.bodySmall),
-              );
-            case MyRatingsLoadStatus.error:
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        viewModel.refreshWarning ??
-                            viewModel.message ??
-                            '평점을 불러오지 못했습니다.',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodySmall,
-                      ),
-                      const SizedBox(height: 16),
-                      MovieLogButton(
-                        label: viewModel.refreshWarning != null ? '목록 다시 조회' : '다시 시도',
-                        width: 140,
-                        onPressed: viewModel.load,
-                      ),
-                    ],
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const _SessionNotice(),
+              const SizedBox(height: 12),
+              if (viewModel.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 80),
+                  child: Center(
+                    child: Text(
+                      '아직 등록한 평점이 없습니다.',
+                      style: AppTextStyles.bodySmall,
+                    ),
                   ),
-                ),
-              );
-            case MyRatingsLoadStatus.success:
-              final notice = viewModel.message;
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (notice != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(notice, style: AppTextStyles.bodySmall),
+                )
+              else
+                for (final entry in viewModel.ratings)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _RatingCard(
+                      entry: entry,
+                      onEdit: () => _onEditPressed(context, entry.rating),
+                      onDelete: () => _onDeletePressed(context, entry.rating),
                     ),
-                  for (final entry in viewModel.ratings)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _RatingCard(
-                        entry: entry,
-                        onEdit: () => _onEditPressed(context, entry.rating),
-                        onDelete: () => _onDeletePressed(context, entry.rating),
-                      ),
-                    ),
-                ],
-              );
-          }
+                  ),
+            ],
+          );
         },
+      ),
+    );
+  }
+}
+
+class _SessionNotice extends StatelessWidget {
+  const _SessionNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _editBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Text(
+        '이번 로그인에서 등록한 평점만 표시돼요. v7에는 토큰 기반 내 평점 전체 조회 API가 없어 재시작 후에는 목록이 비어 있어요.',
+        style: AppTextStyles.bodySmall,
       ),
     );
   }
@@ -260,7 +252,9 @@ class _CardActionButton extends StatelessWidget {
           backgroundColor: background,
           foregroundColor: foreground,
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         ),
         child: Text(label),
@@ -327,7 +321,9 @@ class _DeleteRatingDialogState extends State<_DeleteRatingDialog> {
                       label: '취소',
                       backgroundColor: dialogSubtleColor,
                       foregroundColor: AppColors.violet,
-                      onPressed: _isDeleting ? null : () => Navigator.pop(context, false),
+                      onPressed: _isDeleting
+                          ? null
+                          : () => Navigator.pop(context, false),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -360,9 +356,11 @@ class _DeleteRatingDialogState extends State<_DeleteRatingDialog> {
       if (!mounted) return;
       setState(() {
         _isDeleting = false;
-        _errorText = error is DioException
-            ? writeErrorMessage(error)
-            : '삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        _errorText = switch (error) {
+          StateError(:final message) => message,
+          DioException dioError => writeErrorMessage(dioError),
+          _ => '삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        };
       });
     }
   }

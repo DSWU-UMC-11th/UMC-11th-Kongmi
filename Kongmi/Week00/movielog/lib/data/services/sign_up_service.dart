@@ -13,14 +13,20 @@ class SignUpService {
 
   Future<bool> checkNickname(String nickname) async {
     final encoded = Uri.encodeComponent(nickname.trim());
-    final response = await _dio.get('${ApiConfig.prefix}/members/nickname/$encoded');
-    return CheckResult.fromJson(response.data as Map<String, dynamic>).available;
+    final response = await _dio.get(
+      '${ApiConfig.prefix}/members/nickname/$encoded',
+    );
+    return CheckResult.fromJson(response.data as Map<String, dynamic>)
+        .available;
   }
 
   Future<bool> checkEmail(String email) async {
     final encoded = Uri.encodeComponent(email.trim());
-    final response = await _dio.get('${ApiConfig.prefix}/members/email/$encoded');
-    return CheckResult.fromJson(response.data as Map<String, dynamic>).available;
+    final response = await _dio.get(
+      '${ApiConfig.prefix}/members/email/$encoded',
+    );
+    return CheckResult.fromJson(response.data as Map<String, dynamic>)
+        .available;
   }
 
   Future<CommonResponse<SignUpResult>> signUp(

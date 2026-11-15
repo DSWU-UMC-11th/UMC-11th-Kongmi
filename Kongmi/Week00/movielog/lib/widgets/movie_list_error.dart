@@ -17,10 +17,7 @@ class MovieListError extends StatelessWidget {
           const SizedBox(height: 4),
           const Text('잠시 후 다시 시도해 주세요.'),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text('다시 시도'),
-          ),
+          FilledButton(onPressed: onRetry, child: const Text('다시 시도')),
         ],
       ),
     );

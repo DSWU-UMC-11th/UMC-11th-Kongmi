@@ -10,8 +10,8 @@ class CreateMemberRequest {
   final String nickname;
 
   Map<String, dynamic> toJson() => {
-        'email': email.trim(),
-        'password': password,
-        'nickname': nickname.trim(),
-      };
+    'email': email.trim(),
+    'password': password,
+    'nickname': nickname.trim(),
+  };
 }

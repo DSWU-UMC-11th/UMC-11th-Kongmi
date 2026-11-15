@@ -41,11 +41,7 @@ class TmdbPosterImage extends StatelessWidget {
   }
 
   Widget _loadingBox() {
-    return Container(
-      width: width,
-      height: height,
-      color: Colors.grey.shade200,
-    );
+    return Container(width: width, height: height, color: Colors.grey.shade200);
   }
 
   Widget _placeholder() {

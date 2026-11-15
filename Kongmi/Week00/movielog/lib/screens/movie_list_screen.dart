@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -7,16 +6,6 @@ import '../core/utils/movie_format.dart';
 import '../view_models/movie_list_view_model.dart';
 import '../widgets/movie_grid_card.dart';
 import '../widgets/state_message.dart';
-import '../models/movie.dart';
-import '../services/fake_movie_service.dart';
-import '../storage/genre_preference.dart';
-import '../widgets/genre_chip_bar.dart';
-import '../widgets/movie_grid.dart';
-import '../widgets/movie_list_empty.dart';
-import '../widgets/movie_list_error.dart';
-import '../widgets/movie_list_loading.dart';
-
-enum _DebugScenario { success, empty, failure, failThenRetrySuccess }
 
 class MovieListScreen extends StatelessWidget {
   const MovieListScreen({super.key});
@@ -33,7 +22,10 @@ class MovieListScreen extends StatelessWidget {
           style: TextStyle(color: primary, fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(icon: Icon(Icons.search, color: primary), onPressed: () {}),
+          IconButton(
+            icon: Icon(Icons.search, color: primary),
+            onPressed: () {},
+          ),
         ],
       ),
       body: const Column(
@@ -128,31 +120,33 @@ class _MovieGridArea extends StatelessWidget {
     return Consumer<MovieListViewModel>(
       builder: (context, vm, _) {
         return switch (vm.status) {
-          MovieListLoadStatus.idle ||
-          MovieListLoadStatus.loading => const Center(child: CircularProgressIndicator()),
+          MovieListLoadStatus.idle || MovieListLoadStatus.loading =>
+            const Center(child: CircularProgressIndicator()),
           MovieListLoadStatus.error => StateMessage(
-              message: vm.message ?? '오류가 발생했어요.',
-              onRetry: () => context.read<MovieListViewModel>().loadInitial(),
-            ),
-          MovieListLoadStatus.empty => const StateMessage(message: '해당 조건의 영화가 없어요.'),
+            message: vm.message ?? '오류가 발생했어요.',
+            onRetry: () => context.read<MovieListViewModel>().loadInitial(),
+          ),
+          MovieListLoadStatus.empty => const StateMessage(
+            message: '해당 조건의 영화가 없어요.',
+          ),
           MovieListLoadStatus.success => GridView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.55,
-              ),
-              itemCount: vm.movies.length,
-              itemBuilder: (context, index) {
-                final movie = vm.movies[index];
-                return MovieGridCard(
-                  movie: movie,
-                  subtitle: movieSubtitle(movie, vm.genreNames),
-                  onTap: () => context.push('/movies/${movie.id}', extra: movie),
-                );
-              },
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 20,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.55,
             ),
+            itemCount: vm.movies.length,
+            itemBuilder: (context, index) {
+              final movie = vm.movies[index];
+              return MovieGridCard(
+                movie: movie,
+                subtitle: movieSubtitle(movie, vm.genreNames),
+                onTap: () => context.push('/movies/${movie.id}', extra: movie),
+              );
+            },
+          ),
         };
       },
     );

@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class GenrePreference {
   GenrePreference({SharedPreferencesAsync? preferences})
-      : _preferences = preferences ?? SharedPreferencesAsync();
+    : _preferences = preferences ?? SharedPreferencesAsync();
 
   static const _selectedGenreKey = 'selected_genre';
 

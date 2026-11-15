@@ -30,8 +30,9 @@ class RatingDialog extends StatefulWidget {
 
 class _RatingDialogState extends State<RatingDialog> {
   late int _score = widget.initialScore;
-  late final _commentController =
-      TextEditingController(text: widget.initialComment ?? '');
+  late final _commentController = TextEditingController(
+    text: widget.initialComment ?? '',
+  );
   bool _isSubmitting = false;
   String? _errorText;
 
@@ -74,9 +75,8 @@ class _RatingDialogState extends State<RatingDialog> {
                 child: MovieRatingInput(
                   rating: _score.toDouble(),
                   enabled: !_isSubmitting,
-                  onChanged: (value) => setState(
-                    () => _score = validateServerScore(value),
-                  ),
+                  onChanged: (value) =>
+                      setState(() => _score = validateServerScore(value)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -132,7 +132,9 @@ class _RatingDialogState extends State<RatingDialog> {
                     child: MovieLogButton(
                       label: '확인',
                       isLoading: _isSubmitting,
-                      onPressed: _score > 0 && !_isSubmitting ? _onConfirm : null,
+                      onPressed: _score > 0 && !_isSubmitting
+                          ? _onConfirm
+                          : null,
                     ),
                   ),
                 ],

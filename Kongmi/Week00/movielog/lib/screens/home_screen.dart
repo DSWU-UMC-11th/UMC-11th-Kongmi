@@ -24,13 +24,15 @@ class HomeScreen extends StatelessWidget {
       body: Consumer<MovieHomeViewModel>(
         builder: (context, vm, _) {
           return switch (vm.status) {
-            MovieHomeLoadStatus.idle ||
-            MovieHomeLoadStatus.loading => const Center(child: CircularProgressIndicator()),
+            MovieHomeLoadStatus.idle || MovieHomeLoadStatus.loading =>
+              const Center(child: CircularProgressIndicator()),
             MovieHomeLoadStatus.error => StateMessage(
-                message: vm.message ?? '오류가 발생했어요.',
-                onRetry: () => context.read<MovieHomeViewModel>().loadPopular(),
-              ),
-            MovieHomeLoadStatus.empty => const StateMessage(message: '표시할 영화가 없어요.'),
+              message: vm.message ?? '오류가 발생했어요.',
+              onRetry: () => context.read<MovieHomeViewModel>().loadPopular(),
+            ),
+            MovieHomeLoadStatus.empty => const StateMessage(
+              message: '표시할 영화가 없어요.',
+            ),
             MovieHomeLoadStatus.success => _HomeContent(vm: vm),
           };
         },
@@ -55,7 +57,11 @@ class _HomeContent extends StatelessWidget {
         children: [
           const Text(
             '오늘은 어떤\n영화를 볼까요?',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, height: 1.3),
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              height: 1.3,
+            ),
           ),
           const SizedBox(height: 16),
           _FeaturedCard(
@@ -139,7 +145,10 @@ class _FeaturedCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: primary,
                         borderRadius: BorderRadius.circular(20),
@@ -164,7 +173,10 @@ class _FeaturedCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 16),
@@ -177,7 +189,8 @@ class _FeaturedCard extends StatelessWidget {
                           foregroundColor: Colors.white,
                           shape: const StadiumBorder(),
                         ),
-                        onPressed: () => context.push('/movies/${movie.id}', extra: movie),
+                        onPressed: () =>
+                            context.push('/movies/${movie.id}', extra: movie),
                         icon: const Icon(Icons.info, size: 18),
                         label: const Text('상세보기'),
                       ),
@@ -223,7 +236,10 @@ class _PopularCard extends StatelessWidget {
                       top: 6,
                       left: 6,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(6),

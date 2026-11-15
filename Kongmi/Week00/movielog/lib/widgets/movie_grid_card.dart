@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/utils/movie_format.dart';
 import '../data/models/tmdb_movie_dto.dart';
 import 'tmdb_poster_image.dart';
@@ -37,7 +38,10 @@ class MovieGridCard extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(6),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-class MainScreen extends StatelessWidget {
+import '../view_models/auth_view_model.dart';
+
+class MainScreen extends StatefulWidget {
   const MainScreen({
     super.key,
     required this.currentIndex,
@@ -12,22 +15,32 @@ class MainScreen extends StatelessWidget {
   final Widget child;
 
   @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AuthViewModel>().loadMember();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
+        selectedIndex: widget.currentIndex,
         onDestinationSelected: (index) {
           switch (index) {
             case 0:
               context.go('/home');
-              break;
             case 1:
               context.go('/movies');
-              break;
             case 2:
               context.go('/my');
-              break;
           }
         },
         destinations: const [
