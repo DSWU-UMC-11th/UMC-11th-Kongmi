@@ -9,5 +9,7 @@ class ApiConfig {
     defaultValue: '/v6',
   );
 
-  static const int devMemberId = int.fromEnvironment('DEV_MEMBER_ID');
+  static const String authPrefix = '/v7';
+
+  static String get host => Uri.parse(baseUrl).host;
 }

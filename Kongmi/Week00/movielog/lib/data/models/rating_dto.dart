@@ -13,11 +13,17 @@ class RatingDto {
   final String? comment;
   final DateTime createdAt;
 
-  factory RatingDto.fromJson(Map<String, dynamic> json) => RatingDto(
-        ratingId: (json['ratingId'] as num).toInt(),
-        movieId: (json['movieId'] as num).toInt(),
-        score: (json['score'] as num).toInt(),
-        comment: json['comment'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-      );
+  factory RatingDto.fromJson(Map<String, dynamic> json) {
+    final rawId = json['ratingId'] ?? json['id'];
+    final rawCreatedAt = json['createdAt'];
+    return RatingDto(
+      ratingId: (rawId as num).toInt(),
+      movieId: (json['movieId'] as num).toInt(),
+      score: (json['score'] as num).toInt(),
+      comment: json['comment'] as String?,
+      createdAt: rawCreatedAt is String
+          ? DateTime.parse(rawCreatedAt)
+          : DateTime.now(),
+    );
+  }
 }

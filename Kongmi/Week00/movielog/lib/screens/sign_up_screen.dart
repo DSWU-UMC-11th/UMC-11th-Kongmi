@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../data/models/create_member_request.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
-import '../view_models/learning_member_session.dart';
 import '../view_models/sign_up_view_model.dart';
 import '../widgets/common_app_bar.dart';
 import '../widgets/movielog_button.dart';
@@ -86,7 +85,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _handleSignUp() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final viewModel = context.read<SignUpViewModel>();
-    final session = context.read<LearningMemberSession>();
     await viewModel.submit(
       CreateMemberRequest(
         email: _emailController.text,
@@ -98,19 +96,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final memberId = viewModel.createdMemberId;
     if (viewModel.submitStatus == SubmitStatus.success && memberId != null) {
-      session.setMemberId(memberId);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('회원가입이 완료되었습니다. (memberId: $memberId)')),
+        SnackBar(
+          content: Text('회원가입이 완료되었습니다. (memberId: $memberId) 로그인해 주세요.'),
+        ),
       );
-      context.go('/movies');
+      context.go('/login');
       return;
     }
 
     final message = viewModel.snackbarMessage;
     if (message != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -118,115 +116,118 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final viewModel = context.watch<SignUpViewModel>();
     final isSubmitting = viewModel.isSubmitting;
-    final canSubmit = _agreeToTerms && viewModel.isBothAvailable && !isSubmitting;
+    final canSubmit =
+        _agreeToTerms && viewModel.isBothAvailable && !isSubmitting;
 
     return PopScope(
       canPop: !isSubmitting,
       child: Scaffold(
-      appBar: const CommonAppBar(title: '회원가입'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '무비로그와 함께\n영화 기록을 시작해보세요',
-                style: AppTextStyles.titleLarge,
-              ),
-              const SizedBox(height: 32),
-              _CheckInputRow(
-                label: '닉네임',
-                hint: '사용하실 닉네임을 입력해주세요',
-                fieldKey: _nicknameFieldKey,
-                controller: _nicknameController,
-                status: viewModel.nicknameCheckStatus,
-                errorText: viewModel.nicknameErrorText,
-                canCheck: viewModel.canCheckNickname,
-                enabled: !isSubmitting,
-                onChanged: viewModel.onNicknameChanged,
-                onCheck: () => _checkNickname(viewModel),
-                validator: _validateNickname,
-                availableText: '사용 가능한 닉네임입니다.',
-                checkingText: '닉네임 사용 가능 여부를 확인 중입니다.',
-              ),
-              const SizedBox(height: 24),
-              _CheckInputRow(
-                label: '이메일',
-                hint: 'example@movielog.com',
-                fieldKey: _emailFieldKey,
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                status: viewModel.emailCheckStatus,
-                errorText: viewModel.emailErrorText,
-                canCheck: viewModel.canCheckEmail,
-                enabled: !isSubmitting,
-                onChanged: viewModel.onEmailChanged,
-                onCheck: () => _checkEmail(viewModel),
-                validator: _validateEmail,
-                availableText: '사용 가능한 이메일입니다.',
-                checkingText: '이메일 사용 가능 여부를 확인 중입니다.',
-              ),
-              const SizedBox(height: 24),
-              const Text('비밀번호', style: AppTextStyles.titleMedium),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                enabled: !isSubmitting,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onChanged: (_) => viewModel.onPasswordChanged(),
-                decoration: InputDecoration(
-                  hintText: '대·소문자, 숫자, 특수문자 포함 8자 이상',
-                  errorText: viewModel.passwordErrorText,
-                  errorMaxLines: 2,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
+        appBar: const CommonAppBar(title: '회원가입'),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '무비로그와 함께\n영화 기록을 시작해보세요',
+                  style: AppTextStyles.titleLarge,
                 ),
-                validator: _validatePassword,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _agreeToTerms,
-                    onChanged: isSubmitting
-                        ? null
-                        : (value) {
-                            setState(() {
-                              _agreeToTerms = value ?? false;
-                            });
-                          },
-                    activeColor: AppColors.violet,
-                  ),
-                  const Expanded(
-                    child: Text(
-                      '서비스 이용약관 및 개인정보 처리방침에 동의합니다.',
-                      style: AppTextStyles.bodySmall,
+                const SizedBox(height: 32),
+                _CheckInputRow(
+                  label: '닉네임',
+                  hint: '사용하실 닉네임을 입력해주세요',
+                  fieldKey: _nicknameFieldKey,
+                  controller: _nicknameController,
+                  status: viewModel.nicknameCheckStatus,
+                  errorText: viewModel.nicknameErrorText,
+                  canCheck: viewModel.canCheckNickname,
+                  enabled: !isSubmitting,
+                  onChanged: viewModel.onNicknameChanged,
+                  onCheck: () => _checkNickname(viewModel),
+                  validator: _validateNickname,
+                  availableText: '사용 가능한 닉네임입니다.',
+                  checkingText: '닉네임 사용 가능 여부를 확인 중입니다.',
+                ),
+                const SizedBox(height: 24),
+                _CheckInputRow(
+                  label: '이메일',
+                  hint: 'example@movielog.com',
+                  fieldKey: _emailFieldKey,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  status: viewModel.emailCheckStatus,
+                  errorText: viewModel.emailErrorText,
+                  canCheck: viewModel.canCheckEmail,
+                  enabled: !isSubmitting,
+                  onChanged: viewModel.onEmailChanged,
+                  onCheck: () => _checkEmail(viewModel),
+                  validator: _validateEmail,
+                  availableText: '사용 가능한 이메일입니다.',
+                  checkingText: '이메일 사용 가능 여부를 확인 중입니다.',
+                ),
+                const SizedBox(height: 24),
+                const Text('비밀번호', style: AppTextStyles.titleMedium),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  enabled: !isSubmitting,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  onChanged: (_) => viewModel.onPasswordChanged(),
+                  decoration: InputDecoration(
+                    hintText: '대·소문자, 숫자, 특수문자 포함 8자 이상',
+                    errorText: viewModel.passwordErrorText,
+                    errorMaxLines: 2,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              MovieLogButton(
-                label: '가입하기',
-                width: double.infinity,
-                isLoading: isSubmitting,
-                onPressed: canSubmit ? _handleSignUp : null,
-              ),
-            ],
+                  validator: _validatePassword,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _agreeToTerms,
+                      onChanged: isSubmitting
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _agreeToTerms = value ?? false;
+                              });
+                            },
+                      activeColor: AppColors.violet,
+                    ),
+                    const Expanded(
+                      child: Text(
+                        '서비스 이용약관 및 개인정보 처리방침에 동의합니다.',
+                        style: AppTextStyles.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                MovieLogButton(
+                  label: '가입하기',
+                  width: double.infinity,
+                  isLoading: isSubmitting,
+                  onPressed: canSubmit ? _handleSignUp : null,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -306,7 +307,9 @@ class _CheckInputRow extends StatelessWidget {
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               availableText,
-              style: AppTextStyles.bodySmall.copyWith(color: Colors.green.shade700),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: Colors.green.shade700,
+              ),
             ),
           ),
         if (status == CheckStatus.checking)
@@ -314,7 +317,9 @@ class _CheckInputRow extends StatelessWidget {
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               checkingText,
-              style: AppTextStyles.bodySmall.copyWith(color: Colors.blue.shade700),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: Colors.blue.shade700,
+              ),
             ),
           ),
       ],

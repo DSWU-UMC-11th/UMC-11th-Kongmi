@@ -88,7 +88,9 @@ class SignUpViewModel extends ChangeNotifier {
 
   Future<void> checkNickname(String value) async {
     final requested = value.trim();
-    if (requested.isEmpty || requested != _currentNickname || !canCheckNickname) return;
+    if (requested.isEmpty || requested != _currentNickname || !canCheckNickname) {
+      return;
+    }
 
     final version = ++_nicknameVersion;
     nicknameCheckStatus = CheckStatus.checking;
@@ -97,7 +99,11 @@ class SignUpViewModel extends ChangeNotifier {
 
     try {
       final available = await _service.checkNickname(requested);
-      if (_disposed || version != _nicknameVersion || _currentNickname != requested) return;
+      if (_disposed ||
+          version != _nicknameVersion ||
+          _currentNickname != requested) {
+        return;
+      }
       if (available) {
         nicknameCheckStatus = CheckStatus.available;
         nicknameErrorText = null;
@@ -107,7 +113,11 @@ class SignUpViewModel extends ChangeNotifier {
         _duplicatedNickname = requested;
       }
     } on DioException {
-      if (_disposed || version != _nicknameVersion || _currentNickname != requested) return;
+      if (_disposed ||
+          version != _nicknameVersion ||
+          _currentNickname != requested) {
+        return;
+      }
       nicknameCheckStatus = CheckStatus.error;
       nicknameErrorText = '중복 확인에 실패했습니다. 다시 시도해 주세요.';
     }
@@ -116,7 +126,9 @@ class SignUpViewModel extends ChangeNotifier {
 
   Future<void> checkEmail(String value) async {
     final requested = value.trim();
-    if (requested.isEmpty || requested != _currentEmail || !canCheckEmail) return;
+    if (requested.isEmpty || requested != _currentEmail || !canCheckEmail) {
+      return;
+    }
 
     final version = ++_emailVersion;
     emailCheckStatus = CheckStatus.checking;
@@ -125,7 +137,9 @@ class SignUpViewModel extends ChangeNotifier {
 
     try {
       final available = await _service.checkEmail(requested);
-      if (_disposed || version != _emailVersion || _currentEmail != requested) return;
+      if (_disposed || version != _emailVersion || _currentEmail != requested) {
+        return;
+      }
       if (available) {
         emailCheckStatus = CheckStatus.available;
         emailErrorText = null;
@@ -135,7 +149,9 @@ class SignUpViewModel extends ChangeNotifier {
         _duplicatedEmail = requested;
       }
     } on DioException {
-      if (_disposed || version != _emailVersion || _currentEmail != requested) return;
+      if (_disposed || version != _emailVersion || _currentEmail != requested) {
+        return;
+      }
       emailCheckStatus = CheckStatus.error;
       emailErrorText = '중복 확인에 실패했습니다. 다시 시도해 주세요.';
     }

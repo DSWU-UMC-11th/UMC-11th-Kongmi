@@ -17,11 +17,11 @@ class CreateRatingRequest {
   final String? comment;
 
   Map<String, dynamic> toJson() => {
-        'movieId': movieId,
-        'score': score,
-        if (comment != null && comment!.trim().isNotEmpty)
-          'comment': comment!.trim(),
-      };
+    'movieId': movieId,
+    'score': score,
+    if (comment != null && comment!.trim().isNotEmpty)
+      'comment': comment!.trim(),
+  };
 }
 
 class UpdateRatingRequest {

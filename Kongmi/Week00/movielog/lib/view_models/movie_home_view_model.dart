@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+
 import '../data/models/tmdb_movie_dto.dart';
 import '../data/services/tmdb_movie_service.dart';
 
@@ -15,7 +16,8 @@ class MovieHomeViewModel extends ChangeNotifier {
   String? message;
   bool _disposed = false;
 
-  TmdbMovieDto? get featuredMovie => popularMovies.isEmpty ? null : popularMovies.first;
+  TmdbMovieDto? get featuredMovie =>
+      popularMovies.isEmpty ? null : popularMovies.first;
 
   Future<void> loadPopular() async {
     status = MovieHomeLoadStatus.loading;
@@ -27,7 +29,9 @@ class MovieHomeViewModel extends ChangeNotifier {
       if (_disposed) return;
       popularMovies = page.results.take(5).toList();
       genreNames = {for (final genre in genres) genre.id: genre.name};
-      status = popularMovies.isEmpty ? MovieHomeLoadStatus.empty : MovieHomeLoadStatus.success;
+      status = popularMovies.isEmpty
+          ? MovieHomeLoadStatus.empty
+          : MovieHomeLoadStatus.success;
     } on DioException {
       if (_disposed) return;
       status = MovieHomeLoadStatus.error;

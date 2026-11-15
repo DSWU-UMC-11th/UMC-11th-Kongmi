@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/utils/movie_format.dart';
@@ -51,7 +50,10 @@ class MovieDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영화 상세', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          '영화 상세',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -89,7 +91,10 @@ class MovieDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 28),
-          const Text('줄거리', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            '줄거리',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           if (movie.overview.isEmpty)
             Padding(
@@ -107,25 +112,15 @@ class MovieDetailScreen extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!viewModel.canRate)
-              TextButton(
-                onPressed: () => context.push('/register'),
-                child: const Text('평점을 남기려면 학습용 회원가입이 필요합니다. 회원가입하기'),
-              ),
-            SizedBox(
-              height: 52,
-              width: double.infinity,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(shape: const StadiumBorder()),
-                onPressed: viewModel.canRate ? () => _openRatingDialog(context) : null,
-                icon: const Icon(Icons.star_outline),
-                label: const Text('평점 남기기'),
-              ),
-            ),
-          ],
+        child: SizedBox(
+          height: 52,
+          width: double.infinity,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(shape: const StadiumBorder()),
+            onPressed: () => _openRatingDialog(context),
+            icon: const Icon(Icons.star_outline),
+            label: const Text('평점 남기기'),
+          ),
         ),
       ),
     );

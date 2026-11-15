@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import 'theme/app_colors.dart';
 import 'theme/app_text_styles.dart';
 import 'widgets/common_app_bar.dart';
@@ -22,9 +23,7 @@ class ProfileScreen extends StatelessWidget {
     final bool hasProfileImage = profileImagePath.isNotEmpty;
 
     return Scaffold(
-      appBar: const CommonAppBar(
-        title: '내 프로필',
-      ),
+      appBar: const CommonAppBar(title: '내 프로필'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
@@ -38,17 +37,10 @@ class ProfileScreen extends StatelessWidget {
               const CircleAvatar(
                 radius: 48,
                 backgroundColor: AppColors.violet,
-                child: Icon(
-                  Icons.person,
-                  size: 48,
-                  color: AppColors.white,
-                ),
+                child: Icon(Icons.person, size: 48, color: AppColors.white),
               ),
             const SizedBox(height: 16),
-            const Text(
-              '무비러버',
-              style: AppTextStyles.titleLarge,
-            ),
+            const Text('무비러버', style: AppTextStyles.titleLarge),
             const SizedBox(height: 8),
             const Text(
               '매주 주말엔 영화관으로 출근하는 프로 관람객. 좋은 영화를 보고 기록하는 것을 좋아합니다.',
@@ -99,10 +91,7 @@ class ProfileScreen extends StatelessWidget {
 
             const Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                '선호하는 장르',
-                style: AppTextStyles.titleMedium,
-              ),
+              child: Text('선호하는 장르', style: AppTextStyles.titleMedium),
             ),
             const SizedBox(height: 12),
             Row(
