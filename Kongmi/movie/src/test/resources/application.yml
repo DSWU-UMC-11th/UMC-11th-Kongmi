@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:umc_movie;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+jwt:
+  secret: test-secret-for-context-loading-only-umc-movie
+  access-expiration: 3600
