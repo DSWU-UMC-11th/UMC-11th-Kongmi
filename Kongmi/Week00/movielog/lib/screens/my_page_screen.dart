@@ -79,6 +79,13 @@ class MyPageScreen extends StatelessWidget {
               title: '내가 등록한 평점',
               onTap: () => context.push('/my/ratings'),
             ),
+            const SizedBox(height: 12),
+            _MenuRow(
+              title: '내 즐겨찾기',
+              onTap: member == null
+                  ? null
+                  : () => context.push('/my/favorites'),
+            ),
             const SizedBox(height: 28),
             const _FavoriteGenres(genres: _favoriteGenres),
           ],
@@ -92,7 +99,7 @@ class _MenuRow extends StatelessWidget {
   const _MenuRow({required this.title, required this.onTap});
 
   final String title;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

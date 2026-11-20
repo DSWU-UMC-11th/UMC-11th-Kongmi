@@ -2,12 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/utils/movie_format.dart';
+import '../view_models/favorite_detail_view_model.dart';
 import '../view_models/movie_detail_view_model.dart';
+import '../widgets/favorite_button.dart';
 import '../widgets/rating_dialog.dart';
 import '../widgets/tmdb_poster_image.dart';
 
-class MovieDetailScreen extends StatelessWidget {
+class MovieDetailScreen extends StatefulWidget {
   const MovieDetailScreen({super.key});
+
+  @override
+  State<MovieDetailScreen> createState() => _MovieDetailScreenState();
+}
+
+class _MovieDetailScreenState extends State<MovieDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<FavoriteDetailViewModel>().load();
+    });
+  }
 
   Future<void> _openRatingDialog(BuildContext context) async {
     final viewModel = context.read<MovieDetailViewModel>();
@@ -50,9 +65,10 @@ class MovieDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        centerTitle: true,
+        title: Text(
           '영화 상세',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(color: primary, fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
@@ -69,27 +85,46 @@ class MovieDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            movie.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (year != null) ...[
-                Text(year, style: TextStyle(color: Colors.grey.shade600)),
-                const SizedBox(width: 12),
-              ],
-              Icon(Icons.star, size: 16, color: primary),
-              const SizedBox(width: 4),
-              Text(
-                ratingLabel(movie.voteAverage),
-                style: const TextStyle(fontWeight: FontWeight.w600),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      movie.title,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        if (year != null) ...[
+                          Text(
+                            year,
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        Icon(Icons.star, size: 16, color: primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          ratingLabel(movie.voteAverage),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
+              const FavoriteButton(),
             ],
           ),
+          const _FavoriteErrorBox(),
           const SizedBox(height: 28),
           const Text(
             '줄거리',
@@ -122,6 +157,30 @@ class MovieDetailScreen extends StatelessWidget {
             label: const Text('평점 남기기'),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FavoriteErrorBox extends StatelessWidget {
+  const _FavoriteErrorBox();
+
+  @override
+  Widget build(BuildContext context) {
+    final message = context.select<FavoriteDetailViewModel, String?>(
+      (vm) => vm.errorMessage,
+    );
+    if (message == null) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFCEEEE),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(fontSize: 13, color: Color(0xFFB3261E)),
       ),
     );
   }

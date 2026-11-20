@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 import '../storage/token_storage.dart';
 
+final _favoriteItemPath = RegExp(r'^/v8/favorites/[1-9]\d*$');
+
 class AuthInterceptor extends Interceptor {
   AuthInterceptor(this._storage);
   final TokenStorage _storage;
@@ -13,12 +15,24 @@ class AuthInterceptor extends Interceptor {
 
   bool _isProtected(RequestOptions options) {
     final uri = options.uri;
+    if (uri.host != ApiConfig.host) return false;
     final path = uri.path;
-    final base = ApiConfig.authPrefix;
-    return uri.host == ApiConfig.host &&
-        (path == '$base/members/me' ||
-            path == '$base/ratings' ||
-            path.startsWith('$base/ratings/'));
+    final method = options.method.toUpperCase();
+    const base = ApiConfig.authPrefix;
+
+    final memberAndRatings =
+        path == '$base/members/me' ||
+        path == '$base/ratings' ||
+        path.startsWith('$base/ratings/');
+
+    final favorites =
+        (path == '$base/favorites' && (method == 'GET' || method == 'POST')) ||
+        (_favoriteItemPath.hasMatch(path) &&
+            (method == 'GET' || method == 'DELETE'));
+
+    final movieRecord = path == '$base/movie-records' && method == 'POST';
+
+    return memberAndRatings || favorites || movieRecord;
   }
 
   @override
