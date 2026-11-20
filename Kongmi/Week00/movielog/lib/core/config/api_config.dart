@@ -9,7 +9,7 @@ class ApiConfig {
     defaultValue: '/v6',
   );
 
-  static const String authPrefix = '/v7';
+  static const String authPrefix = '/v8';
 
   static String get host => Uri.parse(baseUrl).host;
 }

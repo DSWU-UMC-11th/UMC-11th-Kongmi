@@ -3,8 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../core/utils/movie_format.dart';
+import '../view_models/load_phase.dart';
 import '../view_models/movie_list_view_model.dart';
+import '../view_models/paged_movies_view_model.dart';
 import '../widgets/movie_grid_card.dart';
+import '../widgets/movie_page_footer.dart';
 import '../widgets/state_message.dart';
 
 class MovieListScreen extends StatelessWidget {
@@ -23,8 +26,9 @@ class MovieListScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            tooltip: '영화 검색',
             icon: Icon(Icons.search, color: primary),
-            onPressed: () {},
+            onPressed: () => context.push('/movies/search'),
           ),
         ],
       ),
@@ -42,36 +46,36 @@ class MovieListScreen extends StatelessWidget {
 class _GenreChips extends StatelessWidget {
   const _GenreChips();
 
+  void _select(BuildContext context, int? genreId) {
+    final changed = context.read<MovieListViewModel>().selectGenre(genreId);
+    if (!changed) return;
+    context.read<PagedMoviesViewModel>().loadInitial(genreId: genreId);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<MovieListViewModel>(
       builder: (context, vm, _) {
-        return AbsorbPointer(
-          absorbing: vm.isLoading,
-          child: Opacity(
-            opacity: vm.isLoading ? 0.5 : 1,
-            child: SizedBox(
-              height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _GenreChip(
-                    label: '전체',
-                    selected: vm.selectedGenreId == null,
-                    onTap: () => vm.selectGenre(null),
-                  ),
-                  for (final genre in vm.genres) ...[
-                    const SizedBox(width: 8),
-                    _GenreChip(
-                      label: genre.name,
-                      selected: vm.selectedGenreId == genre.id,
-                      onTap: () => vm.selectGenre(genre.id),
-                    ),
-                  ],
-                ],
+        return SizedBox(
+          height: 44,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              _GenreChip(
+                label: '전체',
+                selected: vm.selectedGenreId == null,
+                onTap: () => _select(context, null),
               ),
-            ),
+              for (final genre in vm.genres) ...[
+                const SizedBox(width: 8),
+                _GenreChip(
+                  label: genre.name,
+                  selected: vm.selectedGenreId == genre.id,
+                  onTap: () => _select(context, genre.id),
+                ),
+              ],
+            ],
           ),
         );
       },
@@ -117,37 +121,51 @@ class _MovieGridArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<MovieListViewModel>(
+    final genreNames = context.watch<MovieListViewModel>().genreNames;
+
+    return Consumer<PagedMoviesViewModel>(
       builder: (context, vm, _) {
-        return switch (vm.status) {
-          MovieListLoadStatus.idle || MovieListLoadStatus.loading =>
-            const Center(child: CircularProgressIndicator()),
-          MovieListLoadStatus.error => StateMessage(
-            message: vm.message ?? '오류가 발생했어요.',
-            onRetry: () => context.read<MovieListViewModel>().loadInitial(),
-          ),
-          MovieListLoadStatus.empty => const StateMessage(
-            message: '해당 조건의 영화가 없어요.',
-          ),
-          MovieListLoadStatus.success => GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.55,
-            ),
-            itemCount: vm.movies.length,
-            itemBuilder: (context, index) {
-              final movie = vm.movies[index];
-              return MovieGridCard(
-                movie: movie,
-                subtitle: movieSubtitle(movie, vm.genreNames),
-                onTap: () => context.push('/movies/${movie.id}', extra: movie),
-              );
-            },
-          ),
-        };
+        switch (vm.phase) {
+          case LoadPhase.idle:
+          case LoadPhase.loading:
+            return const Center(child: CircularProgressIndicator());
+          case LoadPhase.error:
+            return StateMessage(
+              message: vm.errorMessage ?? '영화 목록을 불러오지 못했습니다.',
+              onRetry: vm.retryInitial,
+            );
+          case LoadPhase.empty:
+            return const StateMessage(message: '해당 조건의 영화가 없어요.');
+          case LoadPhase.ready:
+            return CustomScrollView(
+              key: PageStorageKey('movie-grid-${vm.genreId}'),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  sliver: SliverGrid.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.55,
+                        ),
+                    itemCount: vm.movies.length,
+                    itemBuilder: (context, index) {
+                      final movie = vm.movies[index];
+                      return MovieGridCard(
+                        movie: movie,
+                        subtitle: movieSubtitle(movie, genreNames),
+                        onTap: () =>
+                            context.push('/movies/${movie.id}', extra: movie),
+                      );
+                    },
+                  ),
+                ),
+                SliverToBoxAdapter(child: MoviePageFooter(vm: vm)),
+              ],
+            );
+        }
       },
     );
   }
